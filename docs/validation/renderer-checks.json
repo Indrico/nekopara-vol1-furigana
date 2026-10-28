@@ -1,0 +1,32 @@
+{
+  "patch_version": "0.3.0",
+  "patch_sha256": "29f9e668adb0ec18b3d78830f8b0f39af31025693ff70f41763d84534c4065ab",
+  "test_mode": "decoded scripts in stock KiriKiri fixture",
+  "engine_checks": [
+    "COMPILED_ALL",
+    "BOOTSTRAP_STATUS_READY",
+    "BASE_TEXT_PRESERVED",
+    "RUBY_GROUPS=3",
+    "OTHER_LANGUAGES_PRESERVED",
+    "NATIVE_CORPUS_TEXT_PRESERVED=4102",
+    "F7_AND_HELD_KEY_PASSED",
+    "PREFERENCE_UPDATED",
+    "TYPEWRITER_POSITION_TIMER_AND_WAIT_PRESERVED",
+    "NAME_BITMAP_AND_REPEATED_TOGGLE_PASSED",
+    "ALL_NAME_ANCHORS_AND_HIDE_PASSED",
+    "NAME_RESTORE_AND_ASSIGN_PASSED",
+    "NAME_LANGUAGE_AND_EMPTY_SPEAKER_PASSED",
+    "NATIVE_NAME_IMAGES=16",
+    "BACKLOG_NAME_RUBY_DRAWN"
+  ],
+  "name_bitmap_changed": false,
+  "backlog_name_bitmap_changed": false,
+  "ruby_pixels_changed": 299,
+  "base_pixels_changed": 0,
+  "difference_bounds": [
+    253,
+    20,
+    451,
+    30
+  ]
+}

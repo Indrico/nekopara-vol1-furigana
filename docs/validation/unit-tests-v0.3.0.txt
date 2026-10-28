@@ -1,0 +1,14 @@
+test_all_corpus_annotations_preserve_source (test_patch.PatchTests.test_all_corpus_annotations_preserve_source) ... ok
+test_controls_and_existing_ruby (test_patch.PatchTests.test_controls_and_existing_ruby) ... ok
+test_encrypted_container_has_no_literal_script_names (test_patch.PatchTests.test_encrypted_container_has_no_literal_script_names) ... ok
+test_encrypted_writer_matches_original_stored_payload (test_patch.PatchTests.test_encrypted_writer_matches_original_stored_payload) ... ok
+test_okurigana_and_compounds (test_patch.PatchTests.test_okurigana_and_compounds) ... ok
+test_only_expected_scripts_in_patch (test_patch.PatchTests.test_only_expected_scripts_in_patch) ... ok
+test_patch_roundtrip_and_corruption (test_patch.PatchTests.test_patch_roundtrip_and_corruption) ... ok
+test_protected_names_match_original_game (test_patch.PatchTests.test_protected_names_match_original_game) ... ok
+test_speaker_names_and_image_bounds (test_patch.PatchTests.test_speaker_names_and_image_bounds) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 2.839s
+
+OK

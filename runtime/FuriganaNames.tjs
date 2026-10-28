@@ -1,0 +1,93 @@
+function FuriganaNameInfo(text) {
+    if (global.furiganaEnabled === false || global.CurrentLanguageTag != "jp") return void;
+    text = ((string)text).trim();
+    if (text == "") return void;
+    return global.FuriganaNames[text];
+}
+
+// Only the added band is drawn. The name bitmap itself is copied unchanged.
+function FuriganaDrawNameImageRuby(target, text, x, y, size=10) {
+    var info = global.FuriganaNameInfo(text);
+    if (info === void || size < 6) return;
+    var font = target.font;
+    var face = font.face, height = font.height, bold = font.bold;
+    try {
+        font.face = global.getLanguageFont(0);
+        font.bold = false;
+        for (var i=0; i<info.spans.count; i++) {
+            var span = info.spans[i];
+            font.height = size;
+            var width = font.getTextWidth(span[2]);
+            if (width > span[1]+2) {
+                font.height = Math.max(6, (int)(size*(span[1]+2)/width));
+                width = font.getTextWidth(span[2]);
+            }
+            target.drawText((int)(x+span[0]+(span[1]-width)/2), (int)y,
+                            span[2], 0xFFE365, 255, true, 255, 0x442200, 1, 0, 0);
+        }
+    } catch (e) {
+        font.face = face;
+        font.height = height;
+        font.bold = bold;
+        throw e;
+    }
+    font.face = face;
+    font.height = height;
+    font.bold = bold;
+}
+
+function FuriganaNameBefore(layer) {
+    var layout = layer.furiganaNameLayout;
+    if (layout !== void) {
+        layer.setSize(layer.width, layout.height);
+        layer.top = layout.top;
+        layer.furiganaNameLayout = void;
+    }
+}
+
+function FuriganaNameAfter(layer, text) {
+    var info = global.FuriganaNameInfo(text);
+    if (info === void || text == "") return;
+    var padding = 14;
+    var w = layer.imageWidth, h = layer.imageHeight;
+    var top = layer.top, height = layer.height;
+    var temp = new global.KAGLayer(layer.window, layer);
+    try {
+        temp.setSize(w, h+padding);
+        temp.setImageSize(w, h+padding);
+        temp.fillRect(0, 0, w, h+padding, 0);
+        temp.copyRect(0, padding, layer, 0, 0, w, h);
+        global.FuriganaDrawNameImageRuby(temp, text, 0, 1);
+        layer.setImageSize(w, h+padding);
+        layer.copyRect(0, 0, temp, 0, 0, w, h+padding);
+        layer.setSize(layer.width, height+padding);
+        // RelativeLayer anchors top/centre/bottom using originMode. Compensate
+        // for the larger rectangle so every original glyph stays in place.
+        var origin = layer.originMode;
+        var anchor = (origin == 3 || origin == 7 || origin == 8) ? 0.5 :
+                     ((origin == 4 || origin == 5 || origin == 6) ? 1 : 0);
+        layer.top = top - padding*(1-anchor);
+        layer.furiganaNameLayout = %[top:top, height:height];
+    } catch (e) {
+        invalidate temp;
+        throw e;
+    }
+    invalidate temp;
+}
+
+function FuriganaRefreshNames() {
+    var win = global.kag;
+    for (var page=0; page<2; page++) {
+        if (page == 0 && typeof win.fore != "Object") continue;
+        if (page == 1 && typeof win.back != "Object") continue;
+        var messages = page == 0 ? win.fore.messages : win.back.messages;
+        for (var i=0; i<messages.count; i++) {
+            var layer = messages[i].nameLayer;
+            if (layer !== void && typeof layer.redrawName == "Object" && typeof layer.currentName == "String") {
+                var visible = layer.visible;
+                layer.redrawName();
+                layer.visible = visible;
+            }
+        }
+    }
+}

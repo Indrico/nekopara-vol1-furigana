@@ -1,0 +1,31 @@
+NEKOPARA Vol.1 Furigana v0.3.0
+
+INSTALL
+1. Close the game.
+2. Copy patch3.xp3 next to nekopara_vol1.exe in the game's main folder.
+3. Keep patch.xp3, patch2.xp3, and all other original files.
+4. Launch through Steam and select Japanese.
+
+Click Furigana: ON/OFF in the upper-right corner, or press F7.
+The same toggle controls dialogue and speaker-name readings, including backlog.
+No Python installation or internet connection is needed to play.
+
+UPGRADE
+Replace the earlier furigana patch3.xp3 with this version while the game is closed.
+If another mod uses patch3.xp3, back it up and resolve the conflict first.
+
+UNINSTALL
+Close the game and remove patch3.xp3, or rename it to patch3.xp3.disabled.
+The original executable and archives are not modified.
+
+TROUBLESHOOTING
+Furigana-status.txt should contain Build=0.3.0 and Stage=ready.
+It is written to the game folder, or the save-data folder if necessary.
+If the toggle is missing, check the launched game folder and keep patch2.xp3.
+Report the status-file contents, or state that the file was not created.
+
+Version 0.3.0 has been confirmed working in the maintainer's game installation.
+Automatic readings may need corrections. Other game builds/mods are unverified.
+
+Source, documentation, and releases:
+https://github.com/Indrico/nekopara-vol1-furigana

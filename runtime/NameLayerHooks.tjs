@@ -1,0 +1,24 @@
+    var furiganaNameLayout;
+    function processName(text) {
+        if (typeof global.FuriganaNameBefore == "Object") global.FuriganaNameBefore(this);
+        currentName = text;
+        var result = super.processName(((string)text).trim());
+        if (typeof global.FuriganaNameAfter == "Object") global.FuriganaNameAfter(this, ((string)text).trim());
+        return result;
+    }
+    function store() {
+        var state = super.store();
+        state.furiganaNameLayout = furiganaNameLayout;
+        state.furiganaCurrentName = currentName;
+        return state;
+    }
+    function restore(state) {
+        furiganaNameLayout = state.furiganaNameLayout;
+        if (state.furiganaCurrentName !== void) currentName = state.furiganaCurrentName;
+        return super.restore(state);
+    }
+    function assignImages(src, copyvisiblestate=false) {
+        super.assignImages(...);
+        furiganaNameLayout = typeof src.furiganaNameLayout == "Object" ? src.furiganaNameLayout : void;
+        if (typeof src.currentName == "String") currentName = src.currentName;
+    }

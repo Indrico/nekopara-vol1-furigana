@@ -1,0 +1,16 @@
+.venv/
+work/
+dist/
+evidence/
+__pycache__/
+*.py[cod]
+*.xp3
+*.exe
+*.dll
+*.sig
+*.scn
+*.psb
+*.ttf
+*.otf
+.env
+.env.*

@@ -1,0 +1,42 @@
+{
+  "patch_sha256": "29f9e668adb0ec18b3d78830f8b0f39af31025693ff70f41763d84534c4065ab",
+  "reader": "awaken1ng/krkr-xp3",
+  "mode": "neko_vol1_steam",
+  "files": [
+    {
+      "name": "AfterInit.tjs",
+      "bytes": 6262,
+      "sha256": "8535628d90bac51f04d1d6147d0e27416eb0c1a7179bc26997c12ab111b98867"
+    },
+    {
+      "name": "Furigana.tjs",
+      "bytes": 601468,
+      "sha256": "7963bad832683217b8fb60e273bbf9e4fa010764148c1b55c3487a2d54d4acdb"
+    },
+    {
+      "name": "TextRender.tjs",
+      "bytes": 22504,
+      "sha256": "4653e80143a985633e9c906164e720f645527ffe4cf7cd0abcb2bf390e25fe5e"
+    },
+    {
+      "name": "backlog.tjs",
+      "bytes": 51604,
+      "sha256": "f96568deced66e3372af7119164b933137a99f1530e78c79da6514245caf776f"
+    },
+    {
+      "name": "custom.tjs",
+      "bytes": 104228,
+      "sha256": "32046c2a4d22328ec28d262ed33e5c41171396e601686482bfd734b4dbabe6da"
+    },
+    {
+      "name": "msghack.tjs",
+      "bytes": 33030,
+      "sha256": "c29e6e98831d41f7980fc5860954c7d5fb91603c3ba1bc4d7921ae1d96263d53"
+    },
+    {
+      "name": "rendermsgwin.tjs",
+      "bytes": 38066,
+      "sha256": "52269d274ed3ab55289cdb7adddaca884dbc49d4e5f75a1caf8e839755a3ff4f"
+    }
+  ]
+}

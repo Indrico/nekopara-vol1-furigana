@@ -1,0 +1,102 @@
+// Use the actual RelativeLayer, NameLayer, CustomNameLayer and image loader.
+class AnimKAGLayer extends KAGLayer {
+    function AnimKAGLayer(win, par) { super.KAGLayer(win, par); }
+    function finalize() {}
+    function store() { return %[left:left, top:top, width:width, height:height, visible:visible]; }
+    function restore(state) { setPos(state.left,state.top,state.width,state.height); visible=state.visible; }
+}
+kag.callHook = function() {};
+kag.errorImage = function() {};
+function GetNameLayerImageFile(text, log) {
+    if (text == "ショコラ") return "jp_name_chocola.png";
+    var info = global.FuriganaNames[text];
+    return info !== void ? info.image : "";
+}
+Scripts.execStorage("name-classes.tjs");
+var nameOwner = new KAGLayer(kag, primary);
+nameOwner.diffx = 0;
+nameOwner.diffy = 0;
+nameOwner.nameImageMap = %[];
+nameOwner.setPos(40, 280, 1000, 200);
+var nameLayer = new CustomNameLayer(nameOwner);
+nameLayer.setPos(20, 30, 286, 41);
+kag.fore = %[messages:[%[nameLayer:nameLayer]]];
+kag.back = %[messages:[]];
+
+furiganaEnabled = false;
+nameLayer.processName("嘉祥");
+nameLayer.saveLayerImage(System.exePath + "name-off.bmp", "bmp");
+var originalTop = *(&Layer.top incontextof nameLayer);
+toggleFurigana();
+if (nameLayer.height != 55 || nameLayer.furiganaNameLayout === void) throw new Exception("Name ruby not added");
+if (*(&Layer.top incontextof nameLayer) + 14 != originalTop) throw new Exception("Name baseline moved");
+nameLayer.saveLayerImage(System.exePath + "name-on.bmp", "bmp");
+for (var j=0; j<8; j++) toggleFurigana();
+if (nameLayer.height != 55 || *(&Layer.top incontextof nameLayer)+14 != originalTop) throw new Exception("Repeated name toggle drifted");
+results.add("NAME_BITMAP_AND_REPEATED_TOGGLE_PASSED");
+
+nameLayer.visible = false;
+toggleFurigana();
+if (nameLayer.visible || nameLayer.height != 41) throw new Exception("Hidden name became visible");
+toggleFurigana();
+if (nameLayer.visible) throw new Exception("Hidden name became visible");
+nameLayer.visible = true;
+
+for (var origin=0; origin<9; origin++) {
+    furiganaEnabled = false;
+    nameLayer.processName("嘉祥");
+    nameLayer.originMode = origin;
+    nameLayer.top = 30;
+    originalTop = *(&Layer.top incontextof nameLayer);
+    furiganaEnabled = true;
+    nameLayer.processName("時雨");
+    if (*(&Layer.top incontextof nameLayer)+14 != originalTop) throw new Exception("Origin baseline moved: " + origin);
+}
+results.add("ALL_NAME_ANCHORS_AND_HIDE_PASSED");
+
+var saved = nameLayer.store();
+var restored = new CustomNameLayer(nameOwner);
+restored.restore(saved);
+restored.redrawName();
+if (restored.height != 55 || restored.currentName != "時雨") throw new Exception("Name restore drifted");
+var copied = new CustomNameLayer(nameOwner);
+copied.assignImages(nameLayer, true);
+copied.redrawName();
+if (copied.height != 55 || copied.currentName != "時雨") throw new Exception("Name assignment drifted");
+invalidate restored;
+invalidate copied;
+results.add("NAME_RESTORE_AND_ASSIGN_PASSED");
+
+CurrentLanguageTag = "en";
+nameLayer.redrawName();
+if (nameLayer.height != 41 || nameLayer.furiganaNameLayout !== void) throw new Exception("English name annotated");
+CurrentLanguageTag = "cn";
+nameLayer.redrawName();
+if (nameLayer.height != 41) throw new Exception("Chinese name annotated");
+CurrentLanguageTag = "jp";
+nameLayer.redrawName();
+nameLayer.processName("");
+if (nameLayer.visible || nameLayer.furiganaNameLayout !== void) throw new Exception("Empty speaker annotated");
+nameLayer.processName("時雨");
+results.add("NAME_LANGUAGE_AND_EMPTY_SPEAKER_PASSED");
+nameLayer.processName("ショコラ");
+if (nameLayer.height != 41 || nameLayer.furiganaNameLayout !== void) throw new Exception("Kana-only name annotated");
+var nameEntries = []; nameEntries.assign(FuriganaNames);
+for (var n=0; n<nameEntries.count; n+=2) {
+    nameLayer.processName(nameEntries[n]);
+    if (nameLayer.height != 55) throw new Exception("Name image not annotated: " + nameEntries[n]);
+    if (nameEntries[n] == "時雨") nameLayer.saveLayerImage(System.exePath+"name-shigure-on.bmp","bmp");
+}
+results.add("NATIVE_NAME_IMAGES=" + nameEntries.count/2);
+
+var backlogName = new KAGLayer(kag, primary);
+backlogName.setPos(20, 80, 850, 170);
+backlogName.fillRect(0,0,850,170,0xFF202030);
+var stamp = new KAGLayer(kag, primary);
+stamp.loadImages("jp_name_kasyo.png");
+backlogName.operateRect(54,8,stamp,0,0,286,41);
+backlogName.saveLayerImage(System.exePath+"name-backlog-off.bmp","bmp");
+FuriganaDrawNameImageRuby(backlogName,"嘉祥",54,0,7);
+backlogName.saveLayerImage(System.exePath+"name-backlog-on.bmp","bmp");
+invalidate stamp;
+results.add("BACKLOG_NAME_RUBY_DRAWN");

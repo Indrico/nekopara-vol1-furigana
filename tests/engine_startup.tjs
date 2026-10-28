@@ -1,0 +1,150 @@
+// Isolated test fixture: this does not start NEKOPARA or impersonate Steam.
+Debug.logLocation = System.exePath;
+Debug.logToFile = true;
+function note(s) { Debug.notice(s); }
+System.exceptionHandler = function(e) {
+    Debug.notice("TEST FAILED: " + e.message, e.trace);
+    var a = [e.message, e.trace]; a.save(System.exePath + "failure.txt");
+    System.exit();
+    return true;
+};
+Storages.addAutoPath(System.exePath + "payload-test.xp3>");
+
+var sources = ["AfterInit.tjs", "TextRender.tjs", "rendermsgwin.tjs", "backlog.tjs", "Furigana.tjs", "msghack.tjs", "custom.tjs"];
+for (var i=0; i<sources.count; i++) {
+    Scripts.compileStorage(sources[i], sources[i] + ".tjb");
+    note("COMPILED " + sources[i]);
+}
+
+class KAGLayer extends Layer {
+    function KAGLayer(win, par) { super.Layer(win, par); }
+}
+var VK_F7 = 118;
+var kag = new Window();
+kag.caption = "Furigana engine test";
+kag.setSize(1280, 720);
+kag.setInnerSize(1280, 720);
+var primary = new KAGLayer(kag, null);
+primary.setSize(1280, 720);
+primary.fillRect(0, 0, 1280, 720, 0xFF202030);
+primary.visible = true;
+kag.uibase = primary;
+kag.sflags = %[];
+kag.saveSystemVariables = function() {};
+kag.add = function(obj) {};
+kag.onKeyDown = function(key, shift) {};
+kag.onKeyUp = function(key, shift) {};
+var furiganaRenderPlugin = %[renders:[]];
+var CurrentLanguageTag = "jp";
+function getLanguageFont() { return "IPAGothic"; }
+Scripts.execStorage("TextRender.tjs");
+var KAGLoadScript = function(name) { Scripts.execStorage(name); };
+Scripts.execStorage("bootstrap-test.tjs");
+if (furiganaInitStatus[1] != "Stage=ready") throw new Exception("Bootstrap not ready");
+if (!Storages.isExistentStorage(System.exePath + "Furigana-status.txt")) throw new Exception("Bootstrap status file missing");
+
+var sample = "「……ふぅ、これで荷物もあらかた届いたかな」";
+var renderer = new TextRender();
+renderer.defaultFontSize = 26;
+renderer.defaultRubySize = 10;
+renderer.defaultRubyOffset = -2;
+renderer.defaultLineSpacing = 18;
+renderer.defaultChColor = 0xFFFFFF;
+renderer.defaultFace = "IPAGothic";
+var area = new KAGLayer(kag, primary);
+area.setPos(20, 500, 1220, 180);
+area.visible = true;
+function renderSample() {
+    area.fillRect(0, 0, area.width, area.height, 0xFF202030);
+    renderer.draw(area, 10, 30, 1200, 130, sample);
+    area.saveLayerImage(System.exePath + (global.furiganaEnabled ? "on.bmp" : "off.bmp"), "bmp");
+    furiganaButton.saveLayerImage(System.exePath + "button.bmp", "bmp");
+}
+furiganaRenderPlugin.renders.add(%[furiganaRedraw:renderSample]);
+renderSample();
+var chars = renderer.getCharacters(0, 0);
+var base = "", rubyCount = 0;
+for (var i=0; i<chars.count; i++) {
+    base += chars[i].text;
+    if (chars[i].ruby !== void) rubyCount++;
+}
+if (base != sample) throw new Exception("Base text changed: " + base);
+if (rubyCount < 2) throw new Exception("Ruby missing");
+if (FuriganaText(sample, 1) != sample) throw new Exception("English changed");
+if (FuriganaText(sample, 2) != sample) throw new Exception("Chinese changed");
+if (FuriganaText("") != "" || FuriganaText(sample+"\n\n"+sample).split("\n")[1] != "") throw new Exception("Empty text not preserved");
+var results = ["COMPILED_ALL", "BOOTSTRAP_STATUS_READY", "BASE_TEXT_PRESERVED", "RUBY_GROUPS=" + rubyCount, "OTHER_LANGUAGES_PRESERVED"];
+var entries = []; entries.assign(FuriganaReadings);
+var checked = 0;
+function nativeBase(text) {
+    renderer.clear();
+    renderer.setFont(area.font);
+    renderer.setRenderSize(10000, 10000);
+    (TextRenderBase.render incontextof renderer)(text, false, 0, 0, false);
+    renderer.done();
+    var chars = renderer.getCharacters(0, 0), result = "";
+    for (var c=0; c<chars.count; c++) result += chars[c].text;
+    return result;
+}
+for (var n=0; n<entries.count; n+=2) {
+    var source = entries[n];
+    if (source.indexOf("$") >= 0 || source.indexOf("&") >= 0) continue;
+    if (nativeBase(source) != nativeBase(entries[n+1])) throw new Exception("Corpus text changed: " + source);
+    checked++;
+}
+results.add("NATIVE_CORPUS_TEXT_PRESERVED=" + checked);
+renderSample();
+kag.onKeyDown(VK_F7, 0);
+if (furiganaEnabled !== false) throw new Exception("F7 did not disable");
+kag.onKeyDown(VK_F7, 0);
+if (furiganaEnabled !== false) throw new Exception("Held F7 repeated toggle");
+kag.onKeyUp(VK_F7, 0);
+kag.onKeyDown(VK_F7, 0);
+kag.onKeyUp(VK_F7, 0);
+if (furiganaEnabled !== true) throw new Exception("F7 did not enable");
+results.add("F7_AND_HELD_KEY_PASSED");
+if (kag.sflags.furiganaEnabled !== true) throw new Exception("Setting not saved");
+results.add("PREFERENCE_UPDATED");
+// Exercise the actual patched typewriter renderer with a minimal message host.
+KAGLoadScript = function() {};
+function addAfterInitCallback() {}
+function addKagHookCallback() {}
+class KAGPlugin {}
+Scripts.execStorage("rendermsgwin.tjs");
+Scripts.clone = function(elm) { var copy=%[]; (Dictionary.assign incontextof copy)(elm); return copy; };
+var signals = 0;
+var host = %[
+    marginL:10, marginT:10, lineSpacing:18, hasTextLayer:true, textLayer:area,
+    clearTextLayer:function() { global.area.fillRect(0,0,global.area.width,global.area.height,0xFF202030); }
+];
+var fakeKag = %[
+    fore:%[messages:[host]], back:%[messages:[host]], currentNum:0,
+    currentWithBack:false, inTransition:false, languageType:0, subLanguageType:0,
+    autoIndent:0, actualChSpeed:50, actskipspeed:1,
+    getLangInfo:function(elm, name, lang) { return elm[name]; },
+    onChAdd:function() { global.signals++; }, trigger:function() { global.signals++; }
+];
+var partial = new MsgwinRender(fakeKag, 0);
+partial.defaultFontSize = 26;
+partial.defaultRubySize = 10;
+partial.defaultFace = "IPAGothic";
+partial.setFont(area.font);
+partial.setRenderSize(1200, 150);
+partial.start(%[text:sample]);
+if (partial.timer === void) throw new Exception("Typewriter did not start");
+partial.timer.enabled = false;
+partial.drawCount(10-partial.cpos, true);
+var originalPosition = partial.cpos, originalTimer = partial.timer, originalTime = partial.startTime;
+signals = 0;
+furiganaRenderPlugin.renders = [partial];
+toggleFurigana();
+if (partial.cpos != originalPosition || partial.timer !== originalTimer || partial.startTime != originalTime || signals != 0)
+    throw new Exception("Toggle advanced the typewriter");
+partial._stop();
+furiganaRenderPlugin.renders = [%[furiganaRedraw:renderSample]];
+toggleFurigana();
+results.add("TYPEWRITER_POSITION_TIMER_AND_WAIT_PRESERVED");
+Scripts.execStorage("name-tests.tjs");
+results.save(System.exePath + "success.txt");
+kag.visible = true;
+note("TEST READY");

@@ -1,0 +1,77 @@
+// Runs after the original AfterInit.tjs. Original save payloads stay unannotated.
+var furiganaEnabled = kag.sflags.furiganaEnabled !== false;
+
+function FuriganaText(text, lang=void) {
+    if (lang !== void && lang != 0) return text;
+    if (text == "") return text;
+    var annotated = FuriganaReadings[text];
+    if (annotated !== void) return annotated;
+    var lines = text.split("\n");
+    if (lines.count <= 1) return text;
+    for (var i=0; i<lines.count; i++) {
+        if (lines[i] == "") continue;
+        annotated = FuriganaReadings[lines[i]];
+        if (annotated !== void) lines[i] = annotated;
+    }
+    return lines.join("\n");
+}
+
+function toggleFurigana() {
+    furiganaEnabled = !furiganaEnabled;
+    kag.sflags.furiganaEnabled = furiganaEnabled;
+    kag.saveSystemVariables();
+    furiganaButton.paint();
+    var renders = furiganaRenderPlugin.renders;
+    for (var i=0; i<renders.count; i++) {
+        if (renders[i] !== void) renders[i].furiganaRedraw();
+    }
+    global.FuriganaRefreshNames();
+    // The backlog keeps rasterized text blocks; rebuild them at the same scroll.
+    if (typeof global.furiganaBacklog == "Object" && furiganaBacklog.blockBaseLayer !== void) {
+        furiganaBacklog.clearAllTextBlocks();
+        furiganaBacklog.updateTextBlock(furiganaBacklog.scroll);
+    }
+}
+
+class FuriganaToggleLayer extends KAGLayer {
+    function FuriganaToggleLayer(win, parent) {
+        super.KAGLayer(win, parent);
+        setPos(parent.width - 218, 8, 210, 32);
+        absolute = 2000000000;
+        hitType = htMask;
+        hitThreshold = 0;
+        cursor = crHandPoint;
+        visible = true;
+        paint();
+    }
+    function paint() {
+        fillRect(0, 0, width, height, 0xE6242434);
+        font.face = "Arial";
+        font.height = 18;
+        font.bold = true;
+        drawText(10, 6, "Furigana: " + (global.furiganaEnabled ? "ON" : "OFF") + "  [F7]", 0xFFFFFF, 255, true);
+    }
+    function onMouseDown() {}
+    function onMouseUp() {}
+    function onClick() { global.toggleFurigana(); }
+    function onDoubleClick() {}
+}
+
+var furiganaButton = new FuriganaToggleLayer(kag, kag.uibase);
+kag.add(furiganaButton);
+var furiganaOldKeyDown = kag.onKeyDown;
+var furiganaOldKeyUp = kag.onKeyUp;
+var furiganaKeyHeld = false;
+kag.onKeyDown = function(key, shift) {
+    if (key == VK_F7) {
+        if (!global.furiganaKeyHeld) global.toggleFurigana();
+        global.furiganaKeyHeld = true;
+        return;
+    }
+    global.furiganaOldKeyDown(key, shift);
+};
+kag.onKeyUp = function(key, shift) {
+    if (key == VK_F7) { global.furiganaKeyHeld = false; return; }
+    global.furiganaOldKeyUp(key, shift);
+};
+Debug.notice("Furigana patch loaded");

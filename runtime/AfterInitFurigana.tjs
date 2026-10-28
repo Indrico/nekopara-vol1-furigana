@@ -1,0 +1,21 @@
+// A small status file distinguishes an ignored archive from an init failure.
+var furiganaInitStatus = ["Build=0.3.0", "Stage=after-init-loaded"];
+function saveFuriganaInitStatus() {
+    try {
+        global.furiganaInitStatus.save(System.exePath + "Furigana-status.txt");
+    } catch (e) {
+        // Steam installations may be under a directory with restricted writes.
+        try { global.furiganaInitStatus.save(global.kag.saveDataLocation + "/Furigana-status.txt"); } catch {}
+    }
+}
+saveFuriganaInitStatus();
+try {
+    KAGLoadScript("Furigana.tjs");
+    furiganaInitStatus[1] = "Stage=ready";
+} catch (e) {
+    furiganaInitStatus[1] = "Stage=error";
+    furiganaInitStatus.add("Error=" + e.message);
+    furiganaInitStatus.add("Trace=" + e.trace);
+    System.inform("Furigana patch gagal dimuat: " + e.message + "\nLihat Furigana-status.txt.");
+}
+saveFuriganaInitStatus();
